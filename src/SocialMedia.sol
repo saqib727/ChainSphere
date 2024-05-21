@@ -57,6 +57,7 @@ contract SocialMedia is VRFConsumerBaseV2 {
     error SocialMedia__BatchTransferFailed(
                         address winner
                     );
+    error SocialMedia__NotProfileOwner();
     
     ///////////////////////////////////
     /// Type Declarations (Structs) ///
@@ -235,6 +236,14 @@ contract SocialMedia is VRFConsumerBaseV2 {
         _;
     }
 
+    modifier onlyProfileOwner(uint256 _userId) {
+        // check if msg.sender is the profile owner
+        if(msg.sender != getUserById(_userId).userAddress){
+            revert SocialMedia__NotProfileOwner();
+        }
+        _;
+    }
+
     ///////////////////
     /// Constructor ///
     ///////////////////
@@ -268,6 +277,8 @@ contract SocialMedia is VRFConsumerBaseV2 {
      */
     receive() external payable {}
 
+    fallback() external payable {}
+
     function registerUser(string memory _name, string memory _bio, string memory _profileImageHash) public usernameTaken(_name) {
         uint256 id = userId++;
         // For now, this is the way to create a post with empty comments
@@ -288,12 +299,12 @@ contract SocialMedia is VRFConsumerBaseV2 {
         emit UserRegistered(id, msg.sender, _name);
     }
     
-    function changeUsername(string memory _newName) public checkUserExists(msg.sender) usernameTaken(_newName) {
+    function changeUsername(uint256 _userId, string memory _newName) public checkUserExists(msg.sender) onlyProfileOwner(_userId) usernameTaken(_newName) {
         
         // get userId using the user address
-        uint256 currentUserId = s_userAddressToId[msg.sender];
+        // uint256 currentUserId = _userId;
         // change user name using their id
-        s_users[currentUserId].name = _newName;
+        s_users[_userId].name = _newName;
     }
     
     /**

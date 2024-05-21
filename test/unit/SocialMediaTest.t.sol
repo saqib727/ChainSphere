@@ -58,6 +58,7 @@ contract SocialMediaTest is Test {
     // Constants
     uint256 private constant STARTING_BALANCE = 10 ether;
     uint256 private constant EDITING_FEE = 0.004 ether;
+    uint256 private constant USER_ZERO = 0;
 
     // create a fake user
     address USER = makeAddr("user");
@@ -199,7 +200,7 @@ contract SocialMediaTest is Test {
             SocialMedia.SocialMedia__UserDoesNotExist.selector
         );
         vm.prank(RAN_USER);
-        socialMedia.changeUsername(newName);
+        socialMedia.changeUsername(USER_ZERO, newName);
 
     }
 
@@ -213,22 +214,38 @@ contract SocialMediaTest is Test {
             SocialMedia.SocialMedia__UsernameAlreadyTaken.selector
         );
         vm.prank(RAN_USER);
-        socialMedia.changeUsername(newName);
+        socialMedia.changeUsername(USER_ZERO, newName);
 
     }
 
+    function testRegisteredUserCantChangeUsernameIfNotProfileOwner() public registerThreeUsers {
+        // We will attempt for a user registered on the blockchain to try changing the username for a profile not theirs
+        // The test is expected to revert
+        address RAN_USER = makeAddr("Songrit"); // Note that this user is registered on the Blockchain.
+        string memory newName = "Fulton"; // Note that this does not exist on the Blockchain
+
+        // Test is expected to revert since the nuser is not the profile owner
+        vm.expectRevert(
+            SocialMedia.SocialMedia__NotProfileOwner.selector
+        );
+        vm.prank(RAN_USER);
+        socialMedia.changeUsername(USER_ZERO, newName);
+
+    }
+
+    // Test passed
     function testCanChangeUsernameWhereAllConditionsAreMet() public registerThreeUsers {
-        // Create a random user
+        // Use one of the names on the Blockchain to create an address
         address RAN_USER = makeAddr("Maritji");
-        string memory newName = "Pauline"; // Note that this name exist already on the Blockchain
+        string memory newName = "Pauline"; // Note that this name does not exist on the Blockchain
         string memory expectedName;
 
         // Test is expected to pass
         vm.prank(RAN_USER);
-        socialMedia.changeUsername(newName);
+        socialMedia.changeUsername(USER_ZERO, newName);
 
         // get name of user from the Blockchain
-        expectedName = socialMedia.getUserById(0).name;
+        expectedName = socialMedia.getUserById(USER_ZERO).name;
         console.log("User Name: %s", expectedName);
 
         assertEq(
@@ -1052,7 +1069,7 @@ contract SocialMediaTest is Test {
     // Price Converter Tests //
     ///////////////////////////
     
-    function testCanGetPriceFromPriceFeedAndReturnValueInUsd() public skipFork {
+    function testCanGetPriceFromPriceFeedAndReturnValueInUsd() public view skipFork {
         uint256 ethAmount = 0.5 ether;
         uint256 actualValue = 1000e18; // i.e. $1_000 recall the price of 1 ETH in our Anvil chain is $2_000
         uint256 expectedValue = socialMedia.getUsdValueOfEthAmount(ethAmount);
