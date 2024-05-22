@@ -42,6 +42,8 @@ contract SocialMedia is VRFConsumerBaseV2 {
     /// Errors ///
     //////////////
     error SocialMedia__NotOwner();
+    error SocialMedia_postnotExists();
+    error SocialMedia_commentnotExists();
     error SocialMedia__NotPostOwner();
     error SocialMedia__NotCommentOwner();
     error SocialMedia__UsernameAlreadyTaken();
@@ -187,15 +189,25 @@ contract SocialMedia is VRFConsumerBaseV2 {
         _;
     }
     
-    modifier onlyPostOwner(uint _postId) {
-        if(msg.sender !=  s_postIdToAuthor[_postId]){
+     modifier onlyPostOwner(uint256 _postId) {
+        if (_postId >= s_posts.length) {
+            revert SocialMedia_postnotExists();
+        }
+
+        if (msg.sender != s_postIdToAuthor[_postId]) {
             revert SocialMedia__NotPostOwner();
         }
         _;
     }
     
     modifier onlyCommentOwner(uint256 _postId, uint256 _commentId) {
-        if(msg.sender != s_postAndCommentIdToAddress[_postId][_commentId]){
+        if (_postId >= s_posts.length) {
+            revert SocialMedia_postnotExists();
+        }
+        if (_commentId >= s_postIdToComments[_postId].length) {
+            revert SocialMedia_commentnotExists();
+        }
+        if (msg.sender != s_postAndCommentIdToAddress[_postId][_commentId]) {
             revert SocialMedia__NotCommentOwner();
         }
         _;
@@ -240,6 +252,13 @@ contract SocialMedia is VRFConsumerBaseV2 {
         // check if msg.sender is the profile owner
         if(msg.sender != getUserById(_userId).userAddress){
             revert SocialMedia__NotProfileOwner();
+        }
+        _;
+    }
+
+    modifier postExists(uint256 _postID){
+        if (_postID >= s_posts.length) {
+            revert SocialMedia_postnotExists();
         }
         _;
     }
@@ -339,7 +358,7 @@ contract SocialMedia is VRFConsumerBaseV2 {
     * @dev A user should pay to edit post. The rationale is, to ensure users go through their content before posting since editing of content is not free
     * @notice To effect the payment functionality, we include a receive function to enable the smart contract receive ether. Also, we use Chainlink pricefeed to ensure ether is amount has the required usd equivalent
      */
-    function editPost(uint _postId, string memory _content, string memory _imgHash) public payable onlyPostOwner(_postId) hasPaid {
+    function editPost(uint _postId, string memory _content, string memory _imgHash) public payable onlyPostOwner(_postId) {
         
         s_posts[_postId].content = _content;
         s_posts[_postId].imgHash = _imgHash;
@@ -382,7 +401,7 @@ contract SocialMedia is VRFConsumerBaseV2 {
     * @notice Since the postId is unique and can be mapped to author of the post, we only need the postId to uniquely reference any post in order to comment on it
     * Because in any social media platform there are so much more comments than posts, we allow the commentId not to be unique in general. However, comment ids are unique relative to any given post. Our thought is that this will prevent overflow
      */
-    function createComment(uint _postId, string memory _content) public checkUserExists(msg.sender) {
+    function createComment(uint _postId, string memory _content) public checkUserExists(msg.sender) postExists(_postId){
         //
         uint256 commentId = s_postIdToComments[_postId].length;
         
@@ -405,9 +424,9 @@ contract SocialMedia is VRFConsumerBaseV2 {
     }
     
     /**
-    * @dev only the user who created a comment should be able to edit it. Also, a user should pay to edit their post
+    * @dev only the user who created a comment should be able to edit it.
      */
-    function editComment(uint256 _postId, uint256 _commentId, string memory _content) public payable onlyCommentOwner(_postId, _commentId) hasPaid {
+    function editComment(uint256 _postId, uint256 _commentId, string memory _content) public  onlyCommentOwner(_postId, _commentId)  {
         // get the comment from the Blockchain (call by reference) and update it
         s_postIdToComments[_postId][_commentId].content = _content;
         
