@@ -1,6 +1,6 @@
-import { ethers } from "ethers";
-import chainspere from "../ABI/chainspere.json";
-import { NETWORKS } from "./config";
+const { ethers } = require("ethers");
+const chainspere = require("../ABI/chainspere.json");
+const { NETWORKS } = require("./config");
 
 // dotenv.config();
 
@@ -32,4 +32,4 @@ async function getContract() {
   };
 }
 
-export { getContract };
+module.exports = { getContract };
