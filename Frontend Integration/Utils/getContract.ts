@@ -1,15 +1,15 @@
-const { ethers } = require("ethers");
-const chainspere = require("../ABI/chainspere.json");
-const { NETWORKS } = require("./config");
+import { ethers } from "ethers";
+import chainspere from "../ABI/chainspere.json";
+import { NETWORKS } from "./config";
 
 // dotenv.config();
 
 // const { PRIVATE_KEY, POLYGON_AMOY } = process.env;
-const chainID = 80002;
+const chainID: number = 80002;
 
 const network = NETWORKS[chainID];
 
-async function getContract() {
+async function getContract(): Promise<{ socialMediaInstance: ethers.Contract }> {
   // if (!PRIVATE_KEY) {
   //   throw new Error("DEPLOYER_PRIVATE_KEY is undefined");
   // }
@@ -25,11 +25,10 @@ async function getContract() {
     // signer
   );
   
-
   return {
     // signer,
     socialMediaInstance,
   };
 }
 
-module.exports = { getContract };
+export { getContract };

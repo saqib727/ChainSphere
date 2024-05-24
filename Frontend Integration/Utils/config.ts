@@ -4,4 +4,4 @@ const NETWORKS = {
   },
 };
 
-module.exports = { NETWORKS };
+export { NETWORKS };

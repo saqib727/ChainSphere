@@ -1,8 +1,8 @@
-const { ethers } = require("ethers");
-const { getContract } = require("../Utils/getContract");
+import { ethers } from "ethers";
+import { getContract } from "../Utils/getContract";
 
 // Function to register a new user
-async function registerUser(name, bio, profileImageHash) {
+async function registerUser(name: string, bio: string, profileImageHash: string): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the registerUser function of the contract with provided parameters
@@ -15,7 +15,7 @@ async function registerUser(name, bio, profileImageHash) {
 }
 
 // Function to create a new post
-async function createPost(content, imgHash) {
+async function createPost(content: string, imgHash: string): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the createPost function of the contract with provided parameters
@@ -28,7 +28,7 @@ async function createPost(content, imgHash) {
 }
 
 // Function to upvote a post
-async function upvotePost(postID) {
+async function upvotePost(postID: number): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the upvote function of the contract with provided parameters
@@ -41,7 +41,7 @@ async function upvotePost(postID) {
 }
 
 // Function to create a comment on a post
-async function createComment(postId, content) {
+async function createComment(postId: number, content: string): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the createComment function of the contract with provided parameters
@@ -54,7 +54,7 @@ async function createComment(postId, content) {
 }
 
 // Function to delete a post
-async function deletePost(postId) {
+async function deletePost(postId: number): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the deletePost function of the contract with provided parameters
@@ -67,7 +67,7 @@ async function deletePost(postId) {
 }
 
 // Function to delete a comment
-async function deleteComment(postId, commentId) {
+async function deleteComment(postId: number, commentId: number): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the deleteComment function of the contract with provided parameters
@@ -80,7 +80,7 @@ async function deleteComment(postId, commentId) {
 }
 
 // Function to edit a post
-async function editPost(postId, content, imgHash) {
+async function editPost(postId: number, content: string, imgHash: string): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the editPost function of the contract with provided parameters
@@ -93,7 +93,7 @@ async function editPost(postId, content, imgHash) {
 }
 
 // Function to edit a comment
-async function editComment(postId, commentId, content) {
+async function editComment(postId: number, commentId: number, content: string): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the editComment function of the contract with provided parameters
@@ -106,7 +106,7 @@ async function editComment(postId, commentId, content) {
 }
 
 // Function to downvote a post
-async function downvote(postId) {
+async function downvote(postId: number): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the downvote function of the contract with provided parameters
@@ -119,7 +119,7 @@ async function downvote(postId) {
 }
 
 // Function to like a comment
-async function likeComment(postId, commentId) {
+async function likeComment(postId: number, commentId: number): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the likeComment function of the contract with provided parameters
@@ -132,7 +132,7 @@ async function likeComment(postId, commentId) {
 }
 
 // Function to transfer the contract balance to another address
-async function transferContractBalance(to) {
+async function transferContractBalance(to: string): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the transferContractBalance function of the contract with provided parameters
@@ -145,7 +145,7 @@ async function transferContractBalance(to) {
 }
 
 // Function to get the list of posts by a user
-async function getUserPosts(userId) {
+async function getUserPosts(userId: number): Promise<any> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the getUserPosts function of the contract with provided parameters
@@ -156,7 +156,7 @@ async function getUserPosts(userId) {
 }
 
 // Function to get the list of upvotes for a post
-async function getUpvotes(postId) {
+async function getUpvotes(postId: number): Promise<any> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the getUpvotes function of the contract with provided parameters
@@ -167,7 +167,7 @@ async function getUpvotes(postId) {
 }
 
 // Function to get the list of downvotes for a post
-async function getDownvotes(postId) {
+async function getDownvotes(postId: number): Promise<any> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the getDownvotes function of the contract with provided parameters
@@ -178,7 +178,7 @@ async function getDownvotes(postId) {
 }
 
 // Function to get the list of likes for a comment
-async function getLikes(postId, commentId) {
+async function getLikes(postId: number, commentId: number): Promise<any> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the getLikes function of the contract with provided parameters
@@ -189,7 +189,7 @@ async function getLikes(postId, commentId) {
 }
 
 // Function to follow a user
-async function followUser(userId) {
+async function followUser(userId: number): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the followUser function of the contract with provided parameters
@@ -202,7 +202,7 @@ async function followUser(userId) {
 }
 
 // Function to unfollow a user
-async function unfollowUser(userId) {
+async function unfollowUser(userId: number): Promise<ethers.ContractTransaction> {
     const { signer, socialMediaInstance } = await getContract();
 
     // Call the unfollowUser function of the contract with provided parameters
@@ -214,7 +214,7 @@ async function unfollowUser(userId) {
     return tx;
 }
 
-module.exports = {
+export {
     registerUser,
     createPost,
     upvotePost,
