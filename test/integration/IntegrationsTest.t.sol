@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import { Test, console } from "forge-std/Test.sol";
-//importing our SocialMedia contract
-import { SocialMedia } from "../../src/SocialMedia.sol";
-import { DeploySocialMedia} from "../../script/DeploySocialMedia.s.sol";
-// import { FundSocialMedia, WithdrawSocialMedia } from "../../script/Interactions.s.sol";
+// import { Test, console } from "forge-std/Test.sol";
+// //importing our SocialMedia contract
+// import { SocialMedia } from "../../src/SocialMedia.sol";
+// import { DeploySocialMedia} from "../../script/DeploySocialMedia.s.sol";
+// // import { FundSocialMedia, WithdrawSocialMedia } from "../../script/Interactions.s.sol";
 
-contract SocialMediaTestIntegration is Test{
+// contract SocialMediaTestIntegration is Test{
     // // defining variable 'socialMedia' of type SocialMedia
     // SocialMedia socialMedia;
 
@@ -34,4 +34,4 @@ contract SocialMediaTestIntegration is Test{
 
     //     assert(address(fundMe).balance == 0);
     // }
-}
+// }

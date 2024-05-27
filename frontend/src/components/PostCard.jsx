@@ -1,15 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image1 from "../assets/Rectangle 41.png";
 import Image2 from "../assets/Rectangle 640.png";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { Box } from "@mui/material";
 import {useNavigate, useLocation} from 'react-router-dom';
+import { contractABI, contractAddress } from '../contractDetails';
+import Web3 from "web3";
+import { ethers } from "ethers";
+import { useDispatch, useSelector } from "react-redux";
 
-export default function PostCard() {
+
+
+
+export default function PostCard({post}) {
+  const auth = useSelector((state) => state.auth);
+
   const [imageModal, setImageModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const navigate = useNavigate();
+  const [account, setAccount] = useState('');
+    const [contract, setContract] = useState(null);
+    const [web3, setWeb3] = useState(null);
 
   const open = Boolean(anchorEl);
   const { pathname } = useLocation();
@@ -21,10 +33,83 @@ export default function PostCard() {
     setAnchorEl(event.currentTarget);
   };
 
+
+  useEffect
+  (() => {
+    if (window.ethereum) {
+      const web3Instance = new Web3(window.ethereum);
+      window.ethereum.enable().then(accounts => {
+        setWeb3(web3Instance);
+        setAccount(accounts[0]);
+        const myContract = new web3Instance.eth.Contract(contractABI, contractAddress);
+        setContract(myContract);
+      }).catch(error => {
+        console.error("User denied account access");
+      });
+    } else {
+      alert('MetaMask not detected. Please install MetaMask to use this feature.');
+    }
+  }, []);
+
+  const handleUpVote = async (e) => {
+    e.preventDefault();
+    // setLoading(true)
+    if (!contract) {
+      alert('Contract not loaded');
+      return;
+    }
+    if (post?.author === auth?.userInfo?.address) {
+      alert("You can't vote on your own post");
+      return;
+    }
+
+    try {
+      const postIdInt = Number(post?.postId);
+
+      await contract.methods.upvote(postIdInt).send({ from: account });
+      alert("Success")
+      // setModalOpen(false)
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Failed to create post');
+    }
+    // setLoading(false)
+
+  };
+
+  const handleDownVote = async (e) => {
+    e.preventDefault();
+    // setLoading(true)
+    if (!contract) {
+      alert('Contract not loaded');
+      return;
+    }
+    if (post?.author === auth?.userInfo?.address) {
+      alert("You can't vote on your own post");
+      return;
+    }
+
+    try {
+      const postIdInt = Number(post?.postId);
+
+      await contract.methods.downvote(postIdInt).send({ from: account });
+      alert("Success")
+      // setModalOpen(false)
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Failed to create post');
+    }
+    // setLoading(false)
+
+  };
+
+  // console.log('posty', post?.postId?.toString());
+  
+
   return (
     <div>
       <div className="post-card"
-      onClick={() => navigate("/post/99")}
+      // onClick={() => navigate("/post/99")}
       >
         <img className="post-card__img" src={Image1} alt="" />
         <div className="post-card__content">
@@ -118,7 +203,7 @@ export default function PostCard() {
             </Menu>
           </div>
           <div className="post-card__content__post">
-            Hello guys, Welcome to Chainsphere!
+            {post?.content}
             <img
               className="post-card__content__post__img pointer"
               src={Image2}
@@ -175,7 +260,9 @@ export default function PostCard() {
               </svg>
               20
             </div>
-            <div className="post-card__content__actions__like">
+            <div className="post-card__content__actions__like"
+            onClick={handleUpVote}
+            >
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M18.0701 10.3199C17.8801 10.3199 17.6901 10.2499 17.5401 10.0999L12.0001 4.55994L6.46012 10.0999C6.17012 10.3899 5.69012 10.3899 5.40012 10.0999C5.11012 9.80994 5.11012 9.32994 5.40012 9.03994L11.4701 2.96994C11.7601 2.67994 12.2401 2.67994 12.5301 2.96994L18.6001 9.03994C18.8901 9.32994 18.8901 9.80994 18.6001 10.0999C18.4601 10.2499 18.2601 10.3199 18.0701 10.3199Z" fill="#FFF"/>
 <path d="M12 21.2499C11.59 21.2499 11.25 20.9099 11.25 20.4999V3.66992C11.25 3.25992 11.59 2.91992 12 2.91992C12.41 2.91992 12.75 3.25992 12.75 3.66992V20.4999C12.75 20.9099 12.41 21.2499 12 21.2499Z" fill="#FFF"/>
@@ -183,7 +270,7 @@ export default function PostCard() {
 
               16
             </div>
-            <div className="post-card__content__actions__like">
+            <div className="post-card__content__actions__like" onClick={handleDownVote}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M12.0001 21.2501C11.8101 21.2501 11.6201 21.1801 11.4701 21.0301L5.40012 14.9601C5.11012 14.6701 5.11012 14.1901 5.40012 13.9001C5.69012 13.6101 6.17012 13.6101 6.46012 13.9001L12.0001 19.4401L17.5401 13.9001C17.8301 13.6101 18.3101 13.6101 18.6001 13.9001C18.8901 14.1901 18.8901 14.6701 18.6001 14.9601L12.5301 21.0301C12.3801 21.1801 12.1901 21.2501 12.0001 21.2501Z" fill="#FFF"/>
 <path d="M12 21.08C11.59 21.08 11.25 20.74 11.25 20.33V3.5C11.25 3.09 11.59 2.75 12 2.75C12.41 2.75 12.75 3.09 12.75 3.5V20.33C12.75 20.74 12.41 21.08 12 21.08Z" fill="#FFF"/>

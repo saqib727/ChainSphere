@@ -1,61 +1,110 @@
 import { useNavigate } from "react-router-dom";
 import Web3 from "web3";
-import Web3Modal from "web3modal";
-import { createWeb3Modal, defaultConfig } from "@web3modal/ethers/react";
-import { useWeb3Modal } from "@web3modal/ethers/react";
-import {
-  useWeb3ModalProvider,
-  useWeb3ModalAccount,
-} from "@web3modal/ethers/react";
-import { BrowserProvider, Contract, formatUnits } from "ethers";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { contractABI, contractAddress } from "../contractDetails";
+import jwt from "jsonwebtoken";
+import { useDispatch } from "react-redux";
+
+
 
 export default function Login() {
+  const dispatch = useDispatch();
+  const [account, setAccount] = useState('');
+  const [name, setName] = useState('');
+  const [bio, setBio] = useState('');
+  const [profileImageHash, setProfileImageHash] = useState('');
+  const [contract, setContract] = useState(null);
+  const [web3, setWeb3] = useState(null);
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const projectId = "14f5df1eed8d25d690e259ace4b1f2ca";
 
-  const mainnet = {
-    chainId: 1,
-    name: "Ethereum",
-    currency: "ETH",
-    explorerUrl: "https://etherscan.io",
-    rpcUrl: "https://cloudflare-eth.com",
+
+  useEffect(() => {
+    if (window.ethereum) {
+      console.log('window.ethereum', window.ethereum);
+      const web3Instance = new Web3(window.ethereum);
+      window.ethereum.enable().then(accounts => {
+        setWeb3(web3Instance);
+        setAccount(accounts[0]);
+        const myContract = new web3Instance.eth.Contract(contractABI, contractAddress);
+        setContract(myContract);
+      }).catch(error => {
+        console.error("User denied account access");
+      });
+    } else {
+      alert('MetaMask not detected. Please install MetaMask to use this feature.');
+    }
+  }, []);
+
+
+
+
+  const login = async (e) => {
+    setLoading(true)
+    e.preventDefault();
+    if (!contract) {
+      alert('Contract not loaded');
+      return;
+    }
+    try {
+      const userData = await contract.methods.getUser(account).call();
+      if (userData.userAddress === '0x0000000000000000000000000000000000000000') {
+        alert('User not registered');
+      } else {
+        console.log('userData', userData);
+        setUser(userData);
+        console.log("REACT_APP_JWT_SECRET", process.env.REACT_APP_JWT_SECRET, "REACT_APP_JWT_EXPIRES_IN", process.env.REACT_APP_JWT_EXPIRES_IN);
+
+        const signToken = () => {
+          return  jwt.sign(
+            {
+              name: userData?.name,
+             address: userData?.userAddress,
+              profilePic: userData?.profileImageHash,
+              bio: userData?.bio
+            },
+            process.env.REACT_APP_JWT_SECRET,
+            {
+              expiresIn: process.env.REACT_APP_JWT_EXPIRES_IN,
+            }
+          );
+        }
+        const token = signToken()
+        console.log('jwt.sign', token)
+        localStorage.setItem("token", token);
+        dispatch({
+          type: "USER_LOGIN_SUCCESS",
+          payload: {
+            token,
+          },
+        });
+        navigate("/feed")
+      }
+    } catch (error) {
+      console.error('Error logging in:', error);
+      alert('Failed to login');
+    }
+    setLoading(false)
   };
 
-  const metadata = {
-    name: "My Website",
-    description: "My Website description",
-    url: "https://chainsphere.netlify.app",
-    icons: ["https://avatars.mywebsite.com/"],
+  const createPost = async (e) => {
+    e.preventDefault();
+    if (!contract) {
+      alert('Contract not loaded');
+      return;
+    }
+    try {
+      await contract.methods.createPost("content", "imgHash").send({ from: account });
+      alert('Post created successfully');
+      // setContent('');
+      // setImgHash('');
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Failed to create post');
+    }
   };
-
-  const ethersConfig = defaultConfig({
-    metadata,
-    enableEIP6963: true,
-    enableInjected: true,
-    enableCoinbase: true,
-    rpcUrl: "...",
-    defaultChainId: 1,
-  });
-
-  createWeb3Modal({
-    ethersConfig,
-    chains: [mainnet],
-    projectId,
-    enableAnalytics: true, // Optional - defaults to your Cloud configuration
-  });
-
-  const { open } = useWeb3Modal();
-
-  const { address, chainId, isConnected } = useWeb3ModalAccount();
-  const { walletProvider } = useWeb3ModalProvider();
-
-  // useEffect(() => {
-  //   if (address) {
-  //     console.log('address', address);
-  //   }
-  // }, [address]);
 
   return (
     <main className='auth'>
@@ -65,7 +114,7 @@ export default function Login() {
         <h1 className='auth__card1__title'>Welcome back!</h1>
 
         <form className='auth__card1__form'>
-          <input
+          {/* <input
             type='text'
             className='auth__card1__form__input'
             placeholder='Enter username'
@@ -74,27 +123,27 @@ export default function Login() {
             type='password'
             className='auth__card1__form__input'
             placeholder='Password'
-          />
+          /> */}
 
-          <div className='auth__card1__form__option'>OR</div>
+          {/* <div className='auth__card1__form__option'>OR</div> */}
 
-          <div className='auth__card1__form__input-group'>
+          {/* <div className='auth__card1__form__input-group'>
             <input
               type='text'
               className='auth__card1__form__input-group__input'
-              value={address}
+              value={account}
             />
             <button
               className='auth__card1__form__input-group__button'
-              onClick={() => open()}
+              // onClick={() => open()}
             >
               Connect wallet
             </button>
-          </div>
+          </div> */}
 
-          <button className='auth__card1__form__button'>Login</button>
+          <button className='auth__card1__form__button' onClick={login} disabled={loading}>{loading ? "Loading..." : "Login"}</button>
 
-          <h3 className='auth__card1__form__login'>
+          <h3 className='auth__card1__form__login' >
             Don't have an account?{" "}
             <span className='pointer' onClick={() => navigate("/signup")}>
               Signup

@@ -1,64 +1,58 @@
-import Web3 from "web3";
-import Web3Modal from "web3modal";
 import {useNavigate} from 'react-router-dom';
-import { createWeb3Modal, defaultConfig } from "@web3modal/ethers/react";
-import { useWeb3Modal } from "@web3modal/ethers/react";
-import {
-  useWeb3ModalProvider,
-  useWeb3ModalAccount,
-} from "@web3modal/ethers/react";
-import { BrowserProvider, Contract, formatUnits } from "ethers";
-import { useEffect } from "react";
+import Web3 from "web3";
+
+import { useEffect, useState } from "react";
+import { contractABI, contractAddress } from '../contractDetails';
 
 
 export default function Signup() {
+  const [account, setAccount] = useState('');
+  const [username, setUserName] = useState('');
+  const [contract, setContract] = useState(null);
+  const [web3, setWeb3] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const projectId = "14f5df1eed8d25d690e259ace4b1f2ca";
-
-  const mainnet = {
-    chainId: 1,
-    name: "Ethereum",
-    currency: "ETH",
-    explorerUrl: "https://etherscan.io",
-    rpcUrl: "https://cloudflare-eth.com",
-  };
-
-  const metadata = {
-    name: "My Website",
-    description: "My Website description",
-    url: "https://chainsphere.netlify.app",
-    icons: ["https://avatars.mywebsite.com/"],
-  };
-
-  const ethersConfig = defaultConfig({
-    metadata,
-    enableEIP6963: true,
-    enableInjected: true,
-    enableCoinbase: true,
-    rpcUrl: "...",
-    defaultChainId: 1,
-  });
-
-  createWeb3Modal({
-    ethersConfig,
-    chains: [mainnet],
-    projectId,
-    enableAnalytics: true, // Optional - defaults to your Cloud configuration
-  });
-
-  const { open } = useWeb3Modal();
-
-  const { address, chainId, isConnected } = useWeb3ModalAccount();
-  const { walletProvider } = useWeb3ModalProvider();
-
-
+ 
+  
 
   useEffect(() => {
-    if (address) {
-      console.log('address', address);
+    if (window.ethereum) {
+      console.log('window.ethereum', window.ethereum);
+      const web3Instance = new Web3(window.ethereum);
+      window.ethereum.enable().then(accounts => {
+        setWeb3(web3Instance);
+        setAccount(accounts[0]);
+        const myContract = new web3Instance.eth.Contract(contractABI, contractAddress);
+        setContract(myContract);
+      }).catch(error => {
+        console.error("User denied account access");
+      });
+    } else {
+      alert('MetaMask not detected. Please install MetaMask to use this feature.');
     }
-  }, [address]);
+  }, []);
+
+
+  const registerUser = async (e) => {
+    setLoading(true)
+    e.preventDefault();
+    if (!contract) {
+      alert('Contract not loaded');
+      return;
+    }
+    try {
+      await contract.methods.registerUser(username, "bio", "profileImageHash").send({ from: account });
+      alert('User registered successfully');
+      navigate("/login")
+    } catch (error) {
+      console.error('Error registering user:', error);
+      alert('Failed to register user');
+    }
+    setLoading(false)
+  };
+
+
    
     return (
       <main className="auth">
@@ -69,8 +63,8 @@ export default function Signup() {
   
           <h1 className="auth__card1__title">Let’s sign you up!</h1>
   
-          <div className="auth__card1__form">
-            <input
+          <form className="auth__card1__form" onSubmit={registerUser}>
+            {/* <input
               type="text"
               className="auth__card1__form__input"
               placeholder="Enter Full Name"
@@ -79,20 +73,23 @@ export default function Signup() {
               type="email"
               className="auth__card1__form__input"
               placeholder="Email"
-            />
+            /> */}
             <input
               type="text"
               className="auth__card1__form__input"
               placeholder="username"
+              required
+              value={username}
+              onChange={(e) => setUserName(e.target.value)}
             />
 
-<div className="auth__card1__form__input-group">
-  <input type="text" className="auth__card1__form__input-group__input" value={address} />
+{/* <div className="auth__card1__form__input-group">
+  <input type="text" className="auth__card1__form__input-group__input" />
   <button className="auth__card1__form__input-group__button"
- onClick={() => open()} 
+
   >Connect wallet</button>
-  </div>            
-            <input
+  </div>             */}
+            {/* <input
               type="text"
               className="auth__card1__form__input"
               placeholder="Password"
@@ -101,16 +98,16 @@ export default function Signup() {
               type="text"
               className="auth__card1__form__input"
               placeholder="Confirm Password"
-            />
+            /> */}
   
            
   
-            <button className="auth__card1__form__button">Sign up</button>
+            <button className="auth__card1__form__button" type='submit' disabled={loading}>{loading ? "Loading..." : "Sign up"}</button>
   
             <h3 className="auth__card1__form__login">
             Already have an account? <span className="pointer" onClick={() => navigate("/login")}>Login</span>
             </h3>
-          </div>
+          </form>
         </div>
         <div className="auth__card2">
         <div className="auth__card2__carousel">

@@ -1,8 +1,10 @@
 import Image1 from "../assets/Rectangle 41.png";
 import {useNavigate} from 'react-router-dom';
+import { useSelector } from "react-redux";
 
 
 export default function Links() {
+  const auth = useSelector((state) => state.auth);
 
     const navigate = useNavigate();
 
@@ -18,7 +20,7 @@ export default function Links() {
       />
       <div className="links__inner__profile-group__name">
         <div>Saleem Jibril</div>
-        <div>@saleem</div>
+        <div>@{auth?.userInfo?.name}</div>
       </div>
     </div>
 

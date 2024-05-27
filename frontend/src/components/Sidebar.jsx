@@ -1,13 +1,21 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image1 from "../assets/Rectangle 41.png";
 import { useRef } from "react";
+import { contractABI, contractAddress } from '../contractDetails';
+import Web3 from "web3";
 
 import {useNavigate, useLocation} from 'react-router-dom';
 
 export default function Sidebar() {
     const [modalOpen, setModalOpen] = useState(false);
-    const [image, setImage] = useState("");
     const mediaRef = useRef(null);
+    const [account, setAccount] = useState('');
+    const [contract, setContract] = useState(null);
+    const [web3, setWeb3] = useState(null);
+    const [content, setContent] = useState('');
+    const [image, setImage] = useState(null);
+    const [loading, setLoading] = useState(false);
+  
 
     const navigate = useNavigate();
     const { pathname } = useLocation();
@@ -16,6 +24,67 @@ export default function Sidebar() {
     const handleModalOpen = () => {
       setModalOpen(true);
       };
+
+      useEffect(() => {
+        if (window.ethereum) {
+          const web3Instance = new Web3(window.ethereum);
+          window.ethereum.enable().then(accounts => {
+            setWeb3(web3Instance);
+            setAccount(accounts[0]);
+            const myContract = new web3Instance.eth.Contract(contractABI, contractAddress);
+            setContract(myContract);
+          }).catch(error => {
+            console.error("User denied account access");
+          });
+        } else {
+          alert('MetaMask not detected. Please install MetaMask to use this feature.');
+        }
+      }, []);
+
+      // const uploadImageToPinata = async (file) => {
+      //   const url = https://api.pinata.cloud/pinning/pinFileToIPFS;
+      //   let data = new FormData();
+      //   data.append('file', file);
+    
+      //   const response = await axios.post(url, data, {
+      //     headers: {
+      //       'pinata_api_key': pinataApiKey,
+      //       'pinata_secret_api_key': pinataSecretApiKey,
+      //       'Content-Type': 'multipart/form-data'
+      //     }
+      //   });
+      //   return response.data.IpfsHash;
+      // };
+
+      
+  const createPost = async (e) => {
+    e.preventDefault();
+    setLoading(true)
+    if (!contract) {
+      alert('Contract not loaded');
+      return;
+    }
+    // if (!image) {
+    //   alert('Please select an image');
+    //   return;
+    // }
+
+    try {
+      // Upload image to Pinata
+      // const imgHash = await uploadImageToPinata(image);
+
+      // Create post on blockchain
+      await contract.methods.createPost(content, "imgHash").send({ from: account });
+      setModalOpen(false)
+      setContent('');
+      setImage(null);
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('Failed to create post');
+    }
+    setLoading(false)
+
+  };
 
     return (
         <div className="sidebar">
@@ -141,13 +210,16 @@ export default function Sidebar() {
                   src={Image1}
                   alt=""
                 />
-                <div className="sidebar__modal__inner__grid__form">
+                <form className="sidebar__modal__inner__grid__form" onSubmit={createPost}>
                   <textarea
                     name=""
                     id=""
                     className="sidebar__modal__inner__grid__form__input"
                     placeholder="What's happening?"
                     maxLength={200}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    required
                   ></textarea>
                  {image && <div className="sidebar__modal__inner__grid__form__img">
                  <svg
@@ -207,10 +279,10 @@ export default function Sidebar() {
                       <button onClick={() => setModalOpen(false)}>
                         Cancel
                       </button>
-                      <button>Post</button>
+                      <button type="submit" disabled={loading}>{loading ? "Loading..." : "Post"}</button>
                     </div>
                   </div>
-                </div>
+                </form>
               </div>
             </div>
           </div>

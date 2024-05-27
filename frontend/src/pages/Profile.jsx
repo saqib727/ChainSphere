@@ -1,14 +1,65 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image1 from "../assets/Rectangle 41.png";
 
 import PostCard from "../components/PostCard";
 import Sidebar from "../components/Sidebar";
 import Links from "../components/Links";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import Web3 from 'web3';
+import { contractABI, contractAddress } from "../contractDetails";
+
 
 export default function Profile() {
+  const auth = useSelector((state) => state.auth);
+  const [bio, setBio] = useState(auth?.userInfo?.bio);
+  const [account, setAccount] = useState('');
+  const [contract, setContract] = useState(null);
+  const [web3, setWeb3] = useState(null);
+  const [posts, setPosts] = useState([]);
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+
   const [tab, setTab] = useState("posts");
 
 
+  const handleLogout = () => {
+    dispatch({
+      type: "LOGOUT_SUCCESS",
+    });
+    localStorage.removeItem("token");
+    navigate("/login");
+    window.scrollTo(0, 0);
+  };
+
+  const fetchUserPosts = async (contract, account) => {
+    try {
+      const posts = await contract.methods.getUserPosts(account).call();
+      console.log('posts', posts);
+      setPosts(posts);
+    } catch (error) {
+      console.error('Error fetching posts:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (window.ethereum) {
+      const web3Instance = new Web3(window.ethereum);
+      window.ethereum.enable().then(accounts => {
+        setWeb3(web3Instance);
+        setAccount(accounts[0]);
+        const myContract = new web3Instance.eth.Contract(contractABI, contractAddress);
+        setContract(myContract);
+        fetchUserPosts(myContract, accounts[0]);
+      }).catch(error => {
+        console.error("User denied account access");
+      });
+    } else {
+      alert('MetaMask not detected. Please install MetaMask to use this feature.');
+    }
+  }, []);
 
   return (
     // THings to add
@@ -33,10 +84,8 @@ export default function Profile() {
             </h1>
           </div>
          {tab === "posts" && <div className="profile__main__timeline__cards">
-            <PostCard />
-            <PostCard />
-            <PostCard />
-            <PostCard />
+         {posts?.map((post) => <PostCard post = {post} />)}
+
           </div>}
 
          {tab === "profile" && <div className="profile__main__timeline__form">
@@ -57,10 +106,17 @@ export default function Profile() {
             <img className="" src={Image1} alt="" />
             </div>
             <input className="profile__main__timeline__form__input" type="text" value="Saleem Jibril"  />
-            <input className="profile__main__timeline__form__input" type="text" value="@saleem"  />
-            <input className="profile__main__timeline__form__input" type="text" value="0xFC939221939C057546B88a2cAD1C4526d87fB999" disabled  />
+            <input className="profile__main__timeline__form__input" type="text" value={auth?.userInfo?.name} disabled />
+            <input className="profile__main__timeline__form__input" type="text" value={auth?.userInfo?.address} disabled 
+            
+            />
+            <textarea className="profile__main__timeline__form__input profile__main__timeline__form__textarea" type="text" value={bio}
+             onChange={(e) => setBio(e.target.value)} 
+             disabled 
+              />
 
             <button className="profile__main__timeline__form__button">Update</button>
+            <button className="profile__main__timeline__form__button profile__main__timeline__form__logout" onClick={handleLogout}>Logout</button>
           </div>}
         </div>
         <Links />

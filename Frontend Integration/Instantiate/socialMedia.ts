@@ -1,18 +1,18 @@
 import { ethers } from "ethers";
-import { getContract } from "../Utils/getContract";
+import { getContract } from "../Utils/getContract.ts";
 
 // Function to register a new user
-async function registerUser(name: string, bio: string, profileImageHash: string): Promise<ethers.ContractTransaction> {
-    const { signer, socialMediaInstance } = await getContract();
+async function registerUser(name: string, bio: string, profileImageHash: string, address: string): Promise<ethers.ContractTransaction> {
+    const { socialMediaInstance } = await getContract();
 
-    // Call the registerUser function of the contract with provided parameters
-    const tx = await socialMediaInstance
-        .connect(signer)
-        .registerUser(name, bio, profileImageHash);
+    const tx = await socialMediaInstance.registerUser(name, bio, profileImageHash).send({from: address})
+        
 
     // Return the transaction object
     return tx;
 }
+
+
 
 // Function to create a new post
 async function createPost(content: string, imgHash: string): Promise<ethers.ContractTransaction> {

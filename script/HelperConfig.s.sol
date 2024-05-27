@@ -34,6 +34,8 @@ contract HelperConfig is Script {
     constructor(){
         if(block.chainid == 11155111){
             activeNetworkConfig = getSepoliaEthConfig();
+        } else if(block.chainid == 2442){
+            activeNetworkConfig = getPolygonzkEvmConfig();
         } else{
             activeNetworkConfig = getOrCreateAnvilEthConfig();
         }
@@ -48,6 +50,19 @@ contract HelperConfig is Script {
             subscriptionId: 10914,
             callbackGasLimit: 500_000, // 500,000 gas!
             link: 0x779877A7B0D9E8603169DdbD7836e478b4624789,
+            deployerKey: vm.envUint("PRIVATE_KEY")
+        });
+    }
+
+    function getPolygonzkEvmConfig() public view returns(NetworkConfig memory){
+        return NetworkConfig({
+            priceFeed: 0xd94522a6feF7779f672f4C88eb672da9222f2eAc, // ETH/USD
+            interval: 30,
+            vrfCoordinator: 0xAE975071Be8F8eE67addBC1A82488F1C24858067,//from Chainlink 0x343300b5d84D444B2ADc9116FEF1bED02BE49Cf2
+            gasLane: 0x816bedba8a50b294e5cbd47842baf240c2385f2eaf719edbd4f250a137a8c899, // the key hash from Chainlink
+            subscriptionId: 10914,
+            callbackGasLimit: 500_000, // 500,000 gas!
+            link: 0x5576815a38A3706f37bf815b261cCc7cCA77e975, // 0x0fd9e8d3af1aaee056eb9e802c3a762a667b1904
             deployerKey: vm.envUint("PRIVATE_KEY")
         });
     }
