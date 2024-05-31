@@ -19,6 +19,7 @@ export default function Feed() {
   const [contract, setContract] = useState(null);
   const [web3, setWeb3] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [trendinPosts, setTrendingPosts] = useState([]);
 
 
 
@@ -29,16 +30,18 @@ export default function Feed() {
   }, [pathname]);
 
   const fetchUserPosts = async (contract, account) => {
+    console.log('i dey here mehn');
     try {
       const posts = await contract.methods.getUserPosts(account).call();
       console.log('posts', posts);
-      setPosts(posts);
+      setPosts(posts?.reverse());
     } catch (error) {
       console.error('Error fetching posts:', error);
     }
   };
 
-  useEffect(() => {
+
+  const getUsersPosts = async () => {
     if (window.ethereum) {
       const web3Instance = new Web3(window.ethereum);
       window.ethereum.enable().then(accounts => {
@@ -46,24 +49,83 @@ export default function Feed() {
         setAccount(accounts[0]);
         const myContract = new web3Instance.eth.Contract(contractABI, contractAddress);
         setContract(myContract);
-        fetchUserPosts(myContract, accounts[0]);
+        // fetchUserPosts(myContract, accounts[0]);
       }).catch(error => {
         console.error("User denied account access");
       });
     } else {
       alert('MetaMask not detected. Please install MetaMask to use this feature.');
     }
+  }
+  useEffect(() => {
+    getUsersPosts();
   }, []);
 
   console.log('postyyxy', Number(posts[1]?.postId));
 
 
 
+  useEffect(() => {
+    const initWeb3 = async () => {
+      if (window.ethereum) {
+        const web3Instance = new Web3(window.ethereum);
+        try {
+          // Request account access if needed
+          await window.ethereum.enable();
+          setWeb3(web3Instance);
+        } catch (error) {
+          console.error(error);
+        }
+      } else if (window.web3) {
+        // Legacy dapp browsers
+        const web3Instance = new Web3(window.web3.currentProvider);
+        setWeb3(web3Instance);
+      } else {
+        console.log('Non-Ethereum browser detected. You should consider trying MetaMask!');
+      }
+    };
+    initWeb3();
+  }, []);
+
+  useEffect(() => {
+    if (web3) {
+      // Instantiate contract
+      const contractInstance = new web3.eth.Contract(contractABI, contractAddress);
+      setContract(contractInstance);
+    }
+  }, [web3]);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      if (contract) {
+        try {
+          // Call the smart contract function to get all posts
+          const allPosts = await contract.methods.getAllPosts().call();
+          const trendingPosts = await contract.methods.getAllPosts().call();
+          const allWinnigPosts = await contract.methods.getRecentWinningPosts().call();
+          setPosts(allPosts.reverse());
+          console.log('kylian', allPosts);
+          console.log('dembele1', allWinnigPosts);
+          const tmp = trendingPosts?.sort((a, b) => Number(b.upvotes) - Number(a.upvotes));
+          console.log('tmpp', tmp);
+          setTrendingPosts(tmp);
+    
+        } catch (error) {
+          console.error(error);
+          alert(`Failed to fetch posts ${error?.message || error?.toString()}`);
+
+        }
+      }
+    };
+    fetchPosts();
+  }, [contract]);
+
+
   return (
     // THings to add
     <div className="feed">
       <main className="feed__main">
-        <Sidebar />
+        <Sidebar getUsersPosts={getUsersPosts} />
         <div className="feed__main__timeline">
           <div className="feed__main__timeline__nav">
             <h1
@@ -91,17 +153,14 @@ export default function Feed() {
           </div>
           {tab === "home" && (
             <div className="feed__main__timeline__cards">
-              {posts?.map((post) => <PostCard post = {post} />)}
+              {posts?.map((post) => post?.author !== "0x0000000000000000000000000000000000000000" && <PostCard  getUsersPosts={getUsersPosts} post = {post} />)}
             </div>
           )}
 
           {tab === "trending" && (
-            <div className="feed__main__timeline__cards">
-              <PostCard />
-              <PostCard />
-              <PostCard />
-              <PostCard />
-            </div>
+           <div className="feed__main__timeline__cards">
+           {trendinPosts?.map((post) => <PostCard  getUsersPosts={getUsersPosts} post = {post} />)}
+         </div>
           )}
 {tab === "rewards" && <div className="feed__main__timeline__winners">
 <div className="feed__main__timeline__winners__current-winners">

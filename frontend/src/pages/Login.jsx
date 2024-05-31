@@ -60,7 +60,8 @@ export default function Login() {
         const signToken = () => {
           return  jwt.sign(
             {
-              name: userData?.name,
+              name: userData?.fullNameOfUser,
+              username: userData?.nickName,
              address: userData?.userAddress,
               profilePic: userData?.profileImageHash,
               bio: userData?.bio
@@ -84,27 +85,13 @@ export default function Login() {
       }
     } catch (error) {
       console.error('Error logging in:', error);
-      alert('Failed to login');
+      alert(`Failed to login ${error?.message || error?.toString()}`);
+
     }
     setLoading(false)
   };
 
-  const createPost = async (e) => {
-    e.preventDefault();
-    if (!contract) {
-      alert('Contract not loaded');
-      return;
-    }
-    try {
-      await contract.methods.createPost("content", "imgHash").send({ from: account });
-      alert('Post created successfully');
-      // setContent('');
-      // setImgHash('');
-    } catch (error) {
-      console.error('Error creating post:', error);
-      alert('Failed to create post');
-    }
-  };
+
 
   return (
     <main className='auth'>

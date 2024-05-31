@@ -4,150 +4,395 @@ import Image2 from "../assets/Rectangle 640.png";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { Box } from "@mui/material";
-import {useNavigate, useLocation} from 'react-router-dom';
-import { contractABI, contractAddress } from '../contractDetails';
+import { useNavigate, useLocation } from "react-router-dom";
+import { contractABI, contractAddress } from "../contractDetails";
 import Web3 from "web3";
 import { ethers } from "ethers";
 import { useDispatch, useSelector } from "react-redux";
+import moment from "moment";
 
-
-
-
-export default function PostCard({post}) {
+export default function PostCard({ post, getUsersPosts, comments, reloadPost }) {
+  const MINIMUM_USD = ethers.utils.parseUnits("5", 18); // 5 USD in wei
+  console.log("helo90", Number(post?.upvotes));
   const auth = useSelector((state) => state.auth);
+  const [error, setError] = useState(null);
+  const [upvotes, setUpvotes] = useState(Number(post?.upvotes));
+  const [downvotes, setDownvotes] = useState(Number(post?.downvotes));
+  const [ethAmount, setEthAmount] = useState("");
 
   const [imageModal, setImageModal] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorEl2, setAnchorEl2] = useState(null);
   const navigate = useNavigate();
-  const [account, setAccount] = useState('');
-    const [contract, setContract] = useState(null);
-    const [web3, setWeb3] = useState(null);
+  const [account, setAccount] = useState("");
+  const [contract, setContract] = useState(null);
+  const [web3, setWeb3] = useState(null);
+  const [loading, setLoading] = useState(null);
+  const [etherAmount, setEtherAmount] = useState("0.01"); // Default value, will be updated dynamically
+  const [status, setStatus] = useState("");
+  const [isMetaMaskInstalled, setIsMetaMaskInstalled] = useState(false);
+  const [comment, setComment] = useState("");
+
+  // Function to get the conversion rate and set the appropriate ether amount
 
   const open = Boolean(anchorEl);
+  const open2 = Boolean(anchorEl2);
   const { pathname } = useLocation();
 
   const handleClose = () => {
     setAnchorEl(null);
   };
+  const handleClose2 = () => {
+    setAnchorEl2(null);
+  };
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
+  const handleClick2 = (event) => {
+    setAnchorEl2(event.currentTarget);
+  };
 
+  useEffect(() => {
+    setUpvotes(Number(post?.upvotes));
+    setDownvotes(Number(post?.downvotes));
+  }, [post]);
 
-  useEffect
-  (() => {
+  useEffect(() => {
     if (window.ethereum) {
       const web3Instance = new Web3(window.ethereum);
-      window.ethereum.enable().then(accounts => {
-        setWeb3(web3Instance);
-        setAccount(accounts[0]);
-        const myContract = new web3Instance.eth.Contract(contractABI, contractAddress);
-        setContract(myContract);
-      }).catch(error => {
-        console.error("User denied account access");
-      });
+      window.ethereum
+        .enable()
+        .then((accounts) => {
+          setWeb3(web3Instance);
+          setAccount(accounts[0]);
+          const myContract = new web3Instance.eth.Contract(
+            contractABI,
+            contractAddress
+          );
+          setContract(myContract);
+        })
+        .catch((error) => {
+          console.error("User denied account access");
+        });
     } else {
-      alert('MetaMask not detected. Please install MetaMask to use this feature.');
+      alert(
+        "MetaMask not detected. Please install MetaMask to use this feature."
+      );
     }
   }, []);
 
-  const handleUpVote = async (e) => {
-    e.preventDefault();
-    // setLoading(true)
-    if (!contract) {
-      alert('Contract not loaded');
-      return;
+  const handleDownVote = async (id) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        provider
+      );
+      const contractWithSigner = contract.connect(signer);
+
+      // Call the upvote function in your smart contract
+      await contractWithSigner.downvote(Number(id));
+
+      setLoading(false);
+      setDownvotes(downvotes + 1);
+    } catch (err) {
+      console.error("Error downvoting post:", err);
+      setError(err.message || err.toString());
+      alert(`Failed to downvote post ${err?.message || err?.toString()}`);
+      setLoading(false);
     }
-    if (post?.author === auth?.userInfo?.address) {
-      alert("You can't vote on your own post");
+  };
+
+  const upvotePost = async (id) => {
+    // e.preventDefault();
+    setLoading(true);
+    if (!contract) {
+      alert("Contract not loaded");
       return;
     }
 
     try {
-      const postIdInt = Number(post?.postId);
-
-      await contract.methods.upvote(postIdInt).send({ from: account });
-      alert("Success")
-      // setModalOpen(false)
+      await contract.methods.upvote(Number(id)).send({ from: account });
+      setUpvotes(upvotes + 1);
     } catch (error) {
-      console.error('Error creating post:', error);
-      alert('Failed to create post');
+      console.error("Error upvoting post:", error);
+      alert(`Failed to upvote post ${error?.message || error?.toString()}`);
     }
-    // setLoading(false)
-
+    setLoading(false);
   };
 
-  const handleDownVote = async (e) => {
-    e.preventDefault();
-    // setLoading(true)
-    if (!contract) {
-      alert('Contract not loaded');
-      return;
+  const handleDeletePost = async (id) => {
+    setLoading(true);
+    try {
+      if (!window.ethereum) {
+        throw new Error("MetaMask is not installed");
+      }
+
+      // Request account access if needed
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+
+      // Specify the SePolia chain ID (replace 321 with the actual chain ID)
+      //   const chainId = 11155111; // Example chain ID for SePolia chain, replace with actual chain ID
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );
+
+      // Get the address of the current user
+      const userAddress = await signer.getAddress();
+
+      // Check if the user is the owner of the post
+      const postAuthor = await contract.s_postIdToAuthor(Number(id));
+      console.log("postAuthor", postAuthor);
+
+      if (postAuthor !== userAddress) {
+        throw new Error("You are not the owner of this post");
+      }
+
+      // Prompt the user to enter the amount in MetaMask
+      const ethAmountInWei = await signer.sendTransaction({
+        to: contractAddress,
+        value: ethers.utils.parseEther("0.0015"), // Placeholder value to prompt MetaMask
+      });
+
+      console.log(`ETH Amount in Wei: ${ethAmountInWei.value.toString()}`);
+
+      // Get USD value of the provided ETH amount
+      const usdValue = await contract.getUsdValueOfEthAmount(
+        ethAmountInWei.value
+      );
+      console.log(`USD Value of ETH Amount: ${usdValue.toString()}`);
+
+      // Check if the USD value is greater than the minimum required USD value
+      if (usdValue.lt(MINIMUM_USD)) {
+        throw new Error("Payment not enough, it must be greater than 5 USD");
+      }
+
+      // Call the deletePost function on the smart contract with the necessary payment
+      const tx = await contract.deletePost(Number(id), {
+        value: ethAmountInWei.value,
+      });
+      console.log("Transaction sent:", tx);
+
+      await tx.wait();
+      console.log("Transaction confirmed:", tx);
+
+      setStatus("Post deleted successfully");
+      if (!!getUsersPosts) {
+        getUsersPosts();
+      } else {
+        navigate(-1);
+      }
+      setAnchorEl(null);
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      alert(`Error deleting post ${error?.message}`);
+      setStatus(`Error: ${error.message}`);
     }
-    if (post?.author === auth?.userInfo?.address) {
-      alert("You can't vote on your own post");
+    setLoading(false);
+  };
+
+  const handleDeleteComment = async (postId, commentId) => {
+    console.log('postId', postId, 'commentId', commentId);
+    setLoading(true);
+    try {
+      if (!window.ethereum) {
+        throw new Error("MetaMask is not installed");
+      }
+
+      // Request account access if needed
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+
+      // Specify the SePolia chain ID (replace 321 with the actual chain ID)
+      //   const chainId = 11155111; // Example chain ID for SePolia chain, replace with actual chain ID
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );
+
+      // Get the address of the current user
+      const userAddress = await signer.getAddress();
+
+      // Check if the user is the owner of the post
+      // const postAuthor = await contract.s_postIdToAuthor(Number(postId));
+      // console.log("postAuthor", postAuthor);
+
+      // if (postAuthor !== userAddress) {
+      //   throw new Error("You are not the owner of this post");
+      // }
+
+      // Prompt the user to enter the amount in MetaMask
+      const ethAmountInWei = await signer.sendTransaction({
+        to: contractAddress,
+        value: ethers.utils.parseEther("0.0015"), // Placeholder value to prompt MetaMask
+      });
+
+      console.log(`ETH Amount in Wei: ${ethAmountInWei.value.toString()}`);
+
+      // Get USD value of the provided ETH amount
+      const usdValue = await contract.getUsdValueOfEthAmount(
+        ethAmountInWei.value
+      );
+      console.log(`USD Value of ETH Amount: ${usdValue.toString()}`);
+
+      // Check if the USD value is greater than the minimum required USD value
+      if (usdValue.lt(MINIMUM_USD)) {
+        throw new Error("Payment not enough, it must be greater than 5 USD");
+      }
+
+      // Call the deletePost function on the smart contract with the necessary payment
+      const tx = await contract.deleteComment(Number(postId), Number(commentId), {
+        value: ethAmountInWei.value,
+      });
+      console.log("Transaction sent:", tx);
+
+      await tx.wait();
+      console.log("Transaction confirmed:", tx);
+      reloadPost();
+      setStatus("Comment deleted successfully");
+      // if (!!getUsersPosts) {
+      //   getUsersPosts();
+      // } else {
+      //   navigate(-1);
+      // }
+      setAnchorEl(null);
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      alert(`Error deleting comment ${error?.message}`);
+      setStatus(`Error: ${error.message}`);
+    }
+    setLoading(false);
+  };
+
+  // Function to get the USD value of the provided ETH amount
+  const getConversionRate = async (ethAmountInWei) => {
+    try {
+      // Assuming contract has a function to get conversion rate from ETH to USD
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        provider
+      );
+      const usdValue = await contract.getUsdValueOfEthAmount(ethAmountInWei);
+      return usdValue;
+    } catch (error) {
+      console.error("Error getting conversion rate:", error);
+      throw error;
+    }
+  };
+
+  const checkMetaMask = () => {
+    if (typeof window.ethereum !== "undefined") {
+      return true;
+    } else {
+      console.error("MetaMask is not installed");
+      return false;
+    }
+  };
+
+  const handleCreateComment = async (e, id) => {
+    console.log("my post id", Number(id));
+    e.preventDefault();
+    if (!checkMetaMask()) {
       return;
     }
 
     try {
-      const postIdInt = Number(post?.postId);
+      // Request account access if needed
+      await window.ethereum.request({ method: "eth_requestAccounts" });
 
-      await contract.methods.downvote(postIdInt).send({ from: account });
-      alert("Success")
-      // setModalOpen(false)
+      // Create a new provider and signer from MetaMask
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+
+      // Create a contract instance
+      const contract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );
+
+      // Call the createComment function on the smart contract
+      const tx = await contract.createComment(Number(id), comment);
+      await tx.wait();
+
+      console.log("Comment created successfully:", tx);
+
+      // Clear the content after submitting the comment
+      reloadPost();
+      setComment('');
     } catch (error) {
-      console.error('Error creating post:', error);
-      alert('Failed to create post');
+      alert(`Failed to create comment ${error?.message}`);
+      console.error("Error creating comment:", error);
     }
-    // setLoading(false)
-
   };
-
-  // console.log('posty', post?.postId?.toString());
-  
 
   return (
     <div>
-      <div className="post-card"
-      // onClick={() => navigate("/post/99")}
+      <div
+        className="post-card"
+        // onClick={() => navigate("/post/99")}
       >
-        <img className="post-card__img" src={Image1} alt="" />
+        <img
+          className="post-card__img"
+          src={`https://amethyst-abundant-squid-138.mypinata.cloud/ipfs/${post?.authorProfileImgHash}`}
+          alt=""
+        />
         <div className="post-card__content">
           <div className="post-card__content__title">
             <div>
-              <div>Saleem Jibril</div>
-              <div>@saleem · 1h</div>
+              <div>{post?.authorFullName}</div>
+              <div>
+                @{post?.authorNickName} ·{" "}
+                {moment(parseInt(Number(post?.timestamp) * 1000))
+                  .startOf("mini")
+                  .fromNow()}
+              </div>
             </div>
 
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              onClick={handleClick}
-              className="pointer"
-            >
-              <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-              <g
-                id="SVGRepo_tracerCarrier"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              ></g>
-              <g id="SVGRepo_iconCarrier">
-                {" "}
-                <path
-                  d="M5 10C6.10457 10 7 10.8954 7 12C7 13.1046 6.10457 14 5 14C3.89543 14 3 13.1046 3 12C3 10.8954 3.89543 10 5 10Z"
-                  fill="#FFF"
-                ></path>{" "}
-                <path
-                  d="M12 10C13.1046 10 14 10.8954 14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12C10 10.8954 10.8954 10 12 10Z"
-                  fill="#FFF"
-                ></path>{" "}
-                <path
-                  d="M21 12C21 10.8954 20.1046 10 19 10C17.8954 10 17 10.8954 17 12C17 13.1046 17.8954 14 19 14C20.1046 14 21 13.1046 21 12Z"
-                  fill="#FFF"
-                ></path>{" "}
-              </g>
-            </svg>
+            {post?.author === auth?.userInfo?.address && (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                onClick={handleClick}
+                className="pointer"
+              >
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  {" "}
+                  <path
+                    d="M5 10C6.10457 10 7 10.8954 7 12C7 13.1046 6.10457 14 5 14C3.89543 14 3 13.1046 3 12C3 10.8954 3.89543 10 5 10Z"
+                    fill="#FFF"
+                  ></path>{" "}
+                  <path
+                    d="M12 10C13.1046 10 14 10.8954 14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12C10 10.8954 10.8954 10 12 10Z"
+                    fill="#FFF"
+                  ></path>{" "}
+                  <path
+                    d="M21 12C21 10.8954 20.1046 10 19 10C17.8954 10 17 10.8954 17 12C17 13.1046 17.8954 14 19 14C20.1046 14 21 13.1046 21 12Z"
+                    fill="#FFF"
+                  ></path>{" "}
+                </g>
+              </svg>
+            )}
 
             <Menu
               id="basic-menu"
@@ -158,7 +403,7 @@ export default function PostCard({post}) {
               //     "aria-labelledby": "basic-button",
               //   }}
             >
-              <MenuItem
+              {/* <MenuItem
                 sx={{
                   width: "150px",
                   fontSize: "14px",
@@ -171,7 +416,7 @@ export default function PostCard({post}) {
                 className="subMenu"
               >
                 Edit post
-              </MenuItem>
+              </MenuItem> */}
               <MenuItem
                 sx={{
                   width: "150px",
@@ -183,22 +428,9 @@ export default function PostCard({post}) {
                   },
                 }}
                 className="subMenu"
+                onClick={() => handleDeletePost(post?.postId)}
               >
-                Option
-              </MenuItem>
-              <MenuItem
-                sx={{
-                  width: "150px",
-                  fontSize: "14px",
-                  fontFamily: "Inter",
-                  fontWeight: "500",
-                  "&:hover": {
-                    backgroundColor: "#302c3057",
-                  },
-                }}
-                className="subMenu"
-              >
-                Option
+                {loading ? "Loading..." : "Delete post"}
               </MenuItem>
             </Menu>
           </div>
@@ -206,13 +438,16 @@ export default function PostCard({post}) {
             {post?.content}
             <img
               className="post-card__content__post__img pointer"
-              src={Image2}
+              src={`https://amethyst-abundant-squid-138.mypinata.cloud/ipfs/${post?.imgHash}`}
               alt=""
               onClick={() => setImageModal(true)}
             />
           </div>
           <div className="post-card__content__actions">
-            <div className="post-card__content__actions__comment">
+            <div
+              className="post-card__content__actions__comment"
+              onClick={() => navigate(`/post/${Number(post?.postId)}`)}
+            >
               <svg
                 viewBox="0 0 32 32"
                 version="1.1"
@@ -258,26 +493,52 @@ export default function PostCard({post}) {
                   </g>{" "}
                 </g>
               </svg>
-              20
             </div>
-            <div className="post-card__content__actions__like"
-            onClick={handleUpVote}
+            <div
+              className="post-card__content__actions__like"
+              onClick={() => upvotePost(post?.postId)}
             >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M18.0701 10.3199C17.8801 10.3199 17.6901 10.2499 17.5401 10.0999L12.0001 4.55994L6.46012 10.0999C6.17012 10.3899 5.69012 10.3899 5.40012 10.0999C5.11012 9.80994 5.11012 9.32994 5.40012 9.03994L11.4701 2.96994C11.7601 2.67994 12.2401 2.67994 12.5301 2.96994L18.6001 9.03994C18.8901 9.32994 18.8901 9.80994 18.6001 10.0999C18.4601 10.2499 18.2601 10.3199 18.0701 10.3199Z" fill="#FFF"/>
-<path d="M12 21.2499C11.59 21.2499 11.25 20.9099 11.25 20.4999V3.66992C11.25 3.25992 11.59 2.91992 12 2.91992C12.41 2.91992 12.75 3.25992 12.75 3.66992V20.4999C12.75 20.9099 12.41 21.2499 12 21.2499Z" fill="#FFF"/>
-</svg>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M18.0701 10.3199C17.8801 10.3199 17.6901 10.2499 17.5401 10.0999L12.0001 4.55994L6.46012 10.0999C6.17012 10.3899 5.69012 10.3899 5.40012 10.0999C5.11012 9.80994 5.11012 9.32994 5.40012 9.03994L11.4701 2.96994C11.7601 2.67994 12.2401 2.67994 12.5301 2.96994L18.6001 9.03994C18.8901 9.32994 18.8901 9.80994 18.6001 10.0999C18.4601 10.2499 18.2601 10.3199 18.0701 10.3199Z"
+                  fill="#FFF"
+                />
+                <path
+                  d="M12 21.2499C11.59 21.2499 11.25 20.9099 11.25 20.4999V3.66992C11.25 3.25992 11.59 2.91992 12 2.91992C12.41 2.91992 12.75 3.25992 12.75 3.66992V20.4999C12.75 20.9099 12.41 21.2499 12 21.2499Z"
+                  fill="#FFF"
+                />
+              </svg>
 
-              16
+              {upvotes}
             </div>
-            <div className="post-card__content__actions__like" onClick={handleDownVote}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M12.0001 21.2501C11.8101 21.2501 11.6201 21.1801 11.4701 21.0301L5.40012 14.9601C5.11012 14.6701 5.11012 14.1901 5.40012 13.9001C5.69012 13.6101 6.17012 13.6101 6.46012 13.9001L12.0001 19.4401L17.5401 13.9001C17.8301 13.6101 18.3101 13.6101 18.6001 13.9001C18.8901 14.1901 18.8901 14.6701 18.6001 14.9601L12.5301 21.0301C12.3801 21.1801 12.1901 21.2501 12.0001 21.2501Z" fill="#FFF"/>
-<path d="M12 21.08C11.59 21.08 11.25 20.74 11.25 20.33V3.5C11.25 3.09 11.59 2.75 12 2.75C12.41 2.75 12.75 3.09 12.75 3.5V20.33C12.75 20.74 12.41 21.08 12 21.08Z" fill="#FFF"/>
-</svg>
+            <div
+              className="post-card__content__actions__like"
+              onClick={() => handleDownVote(post?.postId)}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M12.0001 21.2501C11.8101 21.2501 11.6201 21.1801 11.4701 21.0301L5.40012 14.9601C5.11012 14.6701 5.11012 14.1901 5.40012 13.9001C5.69012 13.6101 6.17012 13.6101 6.46012 13.9001L12.0001 19.4401L17.5401 13.9001C17.8301 13.6101 18.3101 13.6101 18.6001 13.9001C18.8901 14.1901 18.8901 14.6701 18.6001 14.9601L12.5301 21.0301C12.3801 21.1801 12.1901 21.2501 12.0001 21.2501Z"
+                  fill="#FFF"
+                />
+                <path
+                  d="M12 21.08C11.59 21.08 11.25 20.74 11.25 20.33V3.5C11.25 3.09 11.59 2.75 12 2.75C12.41 2.75 12.75 3.09 12.75 3.5V20.33C12.75 20.74 12.41 21.08 12 21.08Z"
+                  fill="#FFF"
+                />
+              </svg>
 
-
-              16
+              {downvotes}
             </div>
             <div className="post-card__content__actions__share">
               <svg
@@ -307,60 +568,118 @@ export default function PostCard({post}) {
               24
             </div>
           </div>
-{pathname.includes("post") && <form className="post-card__content__form">
-  <img src={Image1} alt="" />
-                <input type="text" placeholder="Write a comment" />
-</form>}
-          {pathname.includes("post") && <div className="post-card__content__comments">
-            <div className="post-card__content__comments__card">
-            <img className="post-card__content__comments__card__img" src={Image1} alt="" />
-<div className="post-card__content__comments__card__content">
+          {pathname.includes("post") && (
+            <form
+              className="post-card__content__form"
+              onSubmit={(e) => handleCreateComment(e, post?.postId)}
+            >
+              <img src={Image1} alt="" />
+              <input
+                type="text"
+                placeholder="Write a comment"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+              />
+            </form>
+          )}
+          {pathname.includes("post") && (
+            <div className="post-card__content__comments">
+              {comments &&
+                comments?.map((comment) => (
+                  comment?.author !== "0x0000000000000000000000000000000000000000" && <div className="post-card__content__comments__card">
+                    <img
+                      className="post-card__content__comments__card__img"
+                      src={Image1}
+                      alt=""
+                    />
+                    <div className="post-card__content__comments__card__content">
+                      <div className="post-card__content__comments__card__content__title">
+                        <div>
+                          <div>Saleem Jibril</div>
+                          <div>@saleem · 1h</div>
+                        </div>
 
-              <div className="post-card__content__comments__card__content__title">
-                <div>
-                  <div>Saleem Jibril</div>
-                  <div>@saleem · 1h</div>
-                </div>
-              </div>
+                        {comment?.author === auth?.userInfo?.address && (
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                onClick={handleClick2}
+                className="pointer"
+              >
+                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                <g
+                  id="SVGRepo_tracerCarrier"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                ></g>
+                <g id="SVGRepo_iconCarrier">
+                  {" "}
+                  <path
+                    d="M5 10C6.10457 10 7 10.8954 7 12C7 13.1046 6.10457 14 5 14C3.89543 14 3 13.1046 3 12C3 10.8954 3.89543 10 5 10Z"
+                    fill="#FFF"
+                  ></path>{" "}
+                  <path
+                    d="M12 10C13.1046 10 14 10.8954 14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12C10 10.8954 10.8954 10 12 10Z"
+                    fill="#FFF"
+                  ></path>{" "}
+                  <path
+                    d="M21 12C21 10.8954 20.1046 10 19 10C17.8954 10 17 10.8954 17 12C17 13.1046 17.8954 14 19 14C20.1046 14 21 13.1046 21 12Z"
+                    fill="#FFF"
+                  ></path>{" "}
+                </g>
+              </svg>
+            )}
 
-              <div className="post-card__content__comments__card__content__post">
-              Comment from me
-              </div>
-</div>
+<Menu
+              id="basic-menu"
+              anchorEl={anchorEl2}
+              open={open2}
+              onClose={handleClose2}
+              //   MenuListProps={{
+              //     "aria-labelledby": "basic-button",
+              //   }}
+            >
+              {/* <MenuItem
+                sx={{
+                  width: "150px",
+                  fontSize: "14px",
+                  fontFamily: "Inter",
+                  fontWeight: "500",
+                  "&:hover": {
+                    backgroundColor: "#302c3057",
+                  },
+                }}
+                className="subMenu"
+              >
+                Edit post
+              </MenuItem> */}
+              <MenuItem
+                sx={{
+                  width: "150px",
+                  fontSize: "14px",
+                  fontFamily: "Inter",
+                  fontWeight: "500",
+                  "&:hover": {
+                    backgroundColor: "#302c3057",
+                  },
+                }}
+                className="subMenu"
+                onClick={() => handleDeleteComment(post?.postId, comment?.commentId)}
+              >
+                {loading ? "Loading..." : "Delete comment"}
+              </MenuItem>
+            </Menu>
+                      </div>
+
+                      <div className="post-card__content__comments__card__content__post">
+                        {comment?.content}
+                      </div>
+                    </div>
+                  </div>
+                ))}
             </div>
-            <div className="post-card__content__comments__card">
-            <img className="post-card__content__comments__card__img" src={Image1} alt="" />
-<div className="post-card__content__comments__card__content">
-
-              <div className="post-card__content__comments__card__content__title">
-                <div>
-                  <div>Saleem Jibril</div>
-                  <div>@saleem · 1h</div>
-                </div>
-              </div>
-
-              <div className="post-card__content__comments__card__content__post">
-              Comment from me
-              </div>
-</div>
-            </div>
-            <div className="post-card__content__comments__card">
-            <img className="post-card__content__comments__card__img" src={Image1} alt="" />
-<div className="post-card__content__comments__card__content">
-
-              <div className="post-card__content__comments__card__content__title">
-                <div>
-                  <div>Saleem Jibril</div>
-                  <div>@saleem · 1h</div>
-                </div>
-              </div>
-
-              <div className="post-card__content__comments__card__content__post">
-              Comment from me
-              </div>
-</div>
-            </div>
-          </div>}
+          )}
         </div>
 
         {imageModal && (

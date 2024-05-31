@@ -8,6 +8,7 @@ import { contractABI, contractAddress } from '../contractDetails';
 export default function Signup() {
   const [account, setAccount] = useState('');
   const [username, setUserName] = useState('');
+  const [name, setName] = useState('');
   const [contract, setContract] = useState(null);
   const [web3, setWeb3] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -35,6 +36,7 @@ export default function Signup() {
 
 
   const registerUser = async (e) => {
+    console.log("name", name, "username", username);
     setLoading(true)
     e.preventDefault();
     if (!contract) {
@@ -42,12 +44,13 @@ export default function Signup() {
       return;
     }
     try {
-      await contract.methods.registerUser(username, "bio", "profileImageHash").send({ from: account });
+      await contract.methods.registerUser(name, username).send({ from: account });
       alert('User registered successfully');
       navigate("/login")
     } catch (error) {
       console.error('Error registering user:', error);
-      alert('Failed to register user');
+      alert(`Failed to register user ${error?.message || error?.toString()}`);
+
     }
     setLoading(false)
   };
@@ -64,11 +67,14 @@ export default function Signup() {
           <h1 className="auth__card1__title">Let’s sign you up!</h1>
   
           <form className="auth__card1__form" onSubmit={registerUser}>
-            {/* <input
+          <input
               type="text"
               className="auth__card1__form__input"
               placeholder="Enter Full Name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
+            {/* 
             <input
               type="email"
               className="auth__card1__form__input"

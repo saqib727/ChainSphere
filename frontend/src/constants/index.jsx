@@ -5,160 +5,137 @@ import { ShieldHalf } from "lucide-react";
 import { PlugZap } from "lucide-react";
 import { GlobeLock } from "lucide-react";
 
-import user1 from "../assets/profile-pictures/user1.jpg";
-import user2 from "../assets/profile-pictures/user2.jpg";
-import user3 from "../assets/profile-pictures/user3.jpg";
-import user4 from "../assets/profile-pictures/user4.jpg";
-import user5 from "../assets/profile-pictures/user5.jpg";
-import user6 from "../assets/profile-pictures/user6.jpg";
-
 export const navItems = [
-  { label: "Features", href: "#" },
-  { label: "Workflow", href: "#" },
-  { label: "Pricing", href: "#" },
-  { label: "Testimonials", href: "#" },
+  { label: "Privacy", href: "#" },
+  { label: "Reliable&Secure", href: "#" },
+  { label: "SocialMedia", href: "#" },
+  { label: "Actions", href: "#" },
 ];
 
 export const testimonials = [
   {
-    user: "John Doe",
-    company: "Stellar Solutions",
-    image: user1,
-    text: "I am extremely satisfied with the services provided. The team was responsive, professional, and delivered results beyond my expectations.",
+    text: "Chain Sphere empowers users by giving them complete ownership of their data, eliminating invasive ads and unauthorized data sharing commonly found on centralized platforms. With enhanced privacy through blockchain technology.",
   },
   {
-    user: "Jane Smith",
-    company: "Blue Horizon Technologies",
-    image: user2,
-    text: "I couldn't be happier with the outcome of our project. The team's creativity and problem-solving skills were instrumental in bringing our vision to life",
+    text: "In a world where freedom of speech is increasingly challenged, Chain Sphere provides a platform where users can express themselves without fear of arbitrary censorship. By leveraging blockchain technology.",
   },
   {
-    user: "David Johnson",
-    company: "Quantum Innovations",
-    image: user3,
     text: "Working with this company was a pleasure. Their attention to detail and commitment to excellence are commendable. I would highly recommend them to anyone looking for top-notch service.",
   },
   {
-    user: "Ronee Brown",
-    company: "Fusion Dynamics",
-    image: user4,
-    text: "Working with the team at XYZ Company was a game-changer for our project. Their attention to detail and innovative solutions helped us achieve our goals faster than we thought possible. We are grateful for their expertise and professionalism!",
+    text: "Working with the team at XYZ Company was a game-changer for our project. Their attention to detail and innovative solutions helped us achieve our goals faster than we thought possible. ",
   },
   {
-    user: "Michael Wilson",
-    company: "Visionary Creations",
-    image: user5,
-    text: "I am amazed by the level of professionalism and dedication shown by the team. They were able to exceed our expectations and deliver outstanding results.",
+    text: "  Leveraging Chainlink technology, Chain Sphere ensures reliability and security in various aspects of its platform. ",
   },
   {
-    user: "Emily Davis",
-    company: "Synergy Systems",
-    image: user6,
-    text: "The team went above and beyond to ensure our project was a success. Their expertise and dedication are unmatched. I look forward to working with them again in the future.",
+    text: " Chain Sphere operates on a decentralized governance model, allowing users to participate in decision-making processes and shape the future of the platform. ",
   },
 ];
 
 export const features = [
   {
     icon: <BotMessageSquare />,
-    text: "Drag-and-Drop Interface",
+    text: "User Control",
     description:
-      "Easily design and arrange your VR environments with a user-friendly drag-and-drop interface.",
+      " Unlike centralized platforms, Chain Sphere gives you complete ownership of your data. Say goodbye to invasive ads and unauthorized data sharing",
   },
   {
     icon: <Fingerprint />,
-    text: "Multi-Platform Compatibility",
+    text: "Enhanced Privacy",
     description:
-      "Build VR applications that run seamlessly across multiple platforms, including mobile, desktop, and VR headsets.",
+      " Blockchain technology ensures your personal information is secure and private, putting you in control of what you share and with whom.",
   },
   {
     icon: <ShieldHalf />,
-    text: "Built-in Templates",
+    text: "Censorship Resistance",
     description:
-      "Jumpstart your VR projects with a variety of built-in templates for different types of applications and environments.",
+      ": Enjoy freedom of speech without the fear of arbitrary censorship. Your voice matters, and it's heard without filters or restrictions",
   },
+];
+
+export const chainsphere = [
   {
     icon: <BatteryCharging />,
-    text: "Real-Time Preview",
+    text: "Scalability",
     description:
-      "Preview your VR application in real-time as you make changes, allowing for quick iterations and adjustments.",
+      ": Polygon's layer-2 solutions offer high throughput and fast transaction times, ensuring a seamless user experience.",
   },
   {
     icon: <PlugZap />,
-    text: "Collaboration Tools",
+    text: "Low Transaction Costs",
     description:
-      "Work together with your team in real-time on VR projects, enabling seamless collaboration and idea sharing.",
+      ": Enjoy minimal fees, making interactions and transactions affordable for everyone.      ",
   },
   {
     icon: <GlobeLock />,
-    text: "Analytics Dashboard",
+    text: "Interoperability",
     description:
-      "Gain valuable insights into user interactions and behavior within your VR applications with an integrated analytics dashboard.",
+      " Seamlessly connect with other blockchain networks, enhancing your social experience with more flexibility and options.",
+  },
+];
+export const chainsphere1 = [
+  {
+    icon: <BatteryCharging />,
+    text: "Chainlink VRF (Verifiable Random Function)",
+    description:
+      "Ensures fair and transparent reward distribution, enhancing trust within the community.",
+  },
+  {
+    icon: <PlugZap />,
+    text: "Chainlink Automation",
+    description:
+      "Streamlines reward processes and price feeds, ensuring accurate and timely updates without manual intervention.",
+  },
+  {
+    icon: <GlobeLock />,
+    text: "Reliable Price Feeds",
+    description:
+      " Access real-time, tamper-proof price data, crucial for any decentralized application that involves financial transactions or incentives",
   },
 ];
 
+export const chainsphere2 = [
+  {
+    icon: <BotMessageSquare />,
+    text: "Transparency",
+    description:
+      "Every transaction and change is recorded on the blockchain, providing unparalleled transparency ",
+  },
+  {
+    icon: <Fingerprint />,
+    text: "Decentralized Governance",
+    description:
+      " Participate in the decision-making process, shaping the future of the platform through a decentralized governance model.",
+  },
+  {
+    icon: <ShieldHalf />,
+    text: "Community-Driven",
+    description:
+      "Chain Sphere thrives on user engagement and contributions, making it a truly community-oriented platform.",
+  },
+];
 export const checklistItems = [
   {
-    title: "Code merge made easy",
+    title: "Get Started",
+    description: "Sign up now and be part of the future of social media.",
+  },
+  {
+    title: "Explore",
     description:
-      "Track the performance of your VR apps and gain insights into user behavior.",
+      "Dive into a world where you control your data, your privacy, and your social experience.",
   },
   {
-    title: "Review code without worry",
+    title: "Connect",
     description:
-      "Track the performance of your VR apps and gain insights into user behavior.",
-  },
-  {
-    title: "AI Assistance to reduce time",
-    description:
-      "Track the performance of your VR apps and gain insights into user behavior.",
-  },
-  {
-    title: "Share work in minutes",
-    description:
-      "Track the performance of your VR apps and gain insights into user behavior.",
-  },
-];
-
-export const pricingOptions = [
-  {
-    title: "Free",
-    price: "$0",
-    features: [
-      "Private board sharing",
-      "5 Gb Storage",
-      "Web Analytics",
-      "Private Mode",
-    ],
-  },
-  {
-    title: "Pro",
-    price: "$10",
-    features: [
-      "Private board sharing",
-      "10 Gb Storage",
-      "Web Analytics (Advance)",
-      "Private Mode",
-    ],
-  },
-  {
-    title: "Enterprise",
-    price: "$200",
-    features: [
-      "Private board sharing",
-      "Unlimited Storage",
-      "High Performance Network",
-      "Private Mode",
-    ],
+      " Engage with like-minded individuals on a platform built for the people, by the people.",
   },
 ];
 
 export const resourcesLinks = [
-  { href: "#", text: "Getting Started" },
-  { href: "#", text: "Documentation" },
-  { href: "#", text: "Tutorials" },
-  { href: "#", text: "API Reference" },
-  { href: "#", text: "Community Forums" },
+  { href: "#", text: "Sign up for updates" },
+  { href: "#", text: "news" },
+  { href: "#", text: "exclusive insights" },
 ];
 
 export const platformLinks = [
@@ -170,9 +147,8 @@ export const platformLinks = [
 ];
 
 export const communityLinks = [
-  { href: "#", text: "Events" },
-  { href: "#", text: "Meetups" },
-  { href: "#", text: "Conferences" },
-  { href: "#", text: "Hackathons" },
-  { href: "#", text: "Jobs" },
+  {
+    href: "#",
+    text: "Stay in touch through our social media channels and never miss an update",
+  },
 ];
