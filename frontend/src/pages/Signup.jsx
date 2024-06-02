@@ -18,7 +18,43 @@ export default function Signup() {
   
 
   useEffect(() => {
+    const polygonAmoyNetwork = {
+      chainId: '0x13882', // Hexadecimal representation of 137
+      chainName: 'POLYGON AMOY TESTNET',
+      nativeCurrency: {
+        name: 'MATIC',
+        symbol: 'MATIC',
+        decimals: 18,
+      },
+      rpcUrls: ['https://rpc-amoy.polygon.technology/'], // Replace with the actual RPC URL of Polygon Amoy
+      blockExplorerUrls: ['https://amoy.polygonscan.com/'],
+    };
+
     if (window.ethereum) {
+      const switchNetwork = async () => {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: polygonAmoyNetwork.chainId }],
+          });
+        } catch (switchError) {
+          // This error code indicates that the chain has not been added to MetaMask
+          if (switchError.code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [polygonAmoyNetwork],
+              });
+            } catch (addError) {
+              console.error('Error adding Polygon Amoy network:', addError);
+            }
+          } else {
+            console.error('Error switching to Polygon Amoy network:', switchError);
+          }
+        }
+      };
+
+      
       console.log('window.ethereum', window.ethereum);
       const web3Instance = new Web3(window.ethereum);
       window.ethereum.enable().then(accounts => {

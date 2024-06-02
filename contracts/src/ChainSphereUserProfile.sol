@@ -139,9 +139,9 @@ contract ChainSphereUserProfile {
     }
 
 
-    /////////////////
-    /// Functions ///
-    /////////////////
+    //////////////////////////
+    /// Internal Functions ///
+    //////////////////////////
 
 
     /**
@@ -164,10 +164,6 @@ contract ChainSphereUserProfile {
             profileImageHash: ""
         });
 
-        // newUser.id = id;
-        // newUser.userAddress = msg.sender;
-        // newUser.fullNameOfUser = _fullNameOfUser;
-        // newUser.nickName = _username;
         s_addressToUserProfile[msg.sender] = newUser;
         s_userAddressToId[msg.sender] = id;
 
@@ -190,8 +186,6 @@ contract ChainSphereUserProfile {
         onlyProfileOwner(_userId)
         usernameTaken(_newNickName)
     {
-        // get userId using the user address
-        // uint256 currentUserId = _userId;
         // change user name using their id
         s_users[_userId].nickName = _newNickName;
     }

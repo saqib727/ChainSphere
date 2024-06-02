@@ -151,14 +151,15 @@ contract ChainSpherePosts is  CSUserProfile {
     ///////////////////
     /// Constructor ///
     ///////////////////
+
     constructor(address _priceFeed, uint256 _minimumUsd){
         s_priceFeed = AggregatorV3Interface(_priceFeed);
         i_minimumUsd = _minimumUsd;
     }
     
-    /////////////////
-    /// Functions ///
-    /////////////////
+    //////////////////////////
+    /// Internal Functions ///
+    //////////////////////////
     
     /**
      * @dev This function allows only a registered user to create posts on the platform
@@ -291,33 +292,11 @@ contract ChainSpherePosts is  CSUserProfile {
         emit Downvoted(_postId, postAuthorName, downvoterName);
     }
 
-    
-    ///////////////////////
-    // Private Functions //
-    ///////////////////////
-
-    /**
-     * @dev This function checks the the number of upvotes and number of downvotes of a post, calculates their difference to tell if the author of the post is eligible for rewards in that period.
-     * @notice A user can be adjudged eligible on multiple grounds if they have multiple posts with significantly more number of upvotes than downvotes
-     */
-    function _isPostEligibleForReward(uint256 _postId)
-        private
-        view
-        returns (bool isEligible)
-    {
-        uint256 numOfUpvotes = _getPostById(_postId).upvotes; // get number of upvotes of post
-        uint256 numOfDownvotes = _getPostById(_postId).downvotes; // get number of downvotes of post
-        uint256 postScore = numOfUpvotes - numOfDownvotes > 0
-            ? numOfUpvotes - numOfDownvotes
-            : 0; // set minimum postScore to zero. We dont want negative values
-        isEligible = postScore >= MIN_POST_SCORE ? true : false; // a post is adjudged eligible for reward if the post has ten (10) more upvotes than downvotes
-    }
-
     /**
      * @dev This function is to be called automatically using Chainlink Automation every VALIDITY_PERIOD (i.e. 30 days or as desirable). The function loops through an array of recentPosts and checks if posts are eligible for rewards and add the corresponding authors to an array of eligible authors for reward
+     * @param _idsOfRecentPosts is an array of all recent posts from which the Contract will check for eligible posts
      */
     function _pickIdsOfEligiblePosts(uint256[] memory _idsOfRecentPosts) internal {
-        // uint256 len = s_idsOfRecentPosts.length; // number of recent posts
 
         uint256 len = _idsOfRecentPosts.length; // number of recent posts
 
@@ -336,6 +315,31 @@ contract ChainSpherePosts is  CSUserProfile {
         }
 
     }
+
+
+    ///////////////////////
+    // Private Functions //
+    ///////////////////////
+
+    /**
+     * @dev This function checks the the number of upvotes and number of downvotes of a post, calculates their difference to tell if the author of the post is eligible for rewards in that period.
+     * @notice A user can be adjudged eligible on multiple grounds if they have multiple posts with significantly more number of upvotes than downvotes
+     * @param _postId is the id of the post whose eligibility is to be determined
+     */
+    function _isPostEligibleForReward(uint256 _postId)
+        private
+        view
+        returns (bool isEligible)
+    {
+        uint256 numOfUpvotes = _getPostById(_postId).upvotes; // get number of upvotes of post
+        uint256 numOfDownvotes = _getPostById(_postId).downvotes; // get number of downvotes of post
+        uint256 postScore = numOfUpvotes - numOfDownvotes > 0
+            ? numOfUpvotes - numOfDownvotes
+            : 0; // set minimum postScore to zero. We dont want negative values
+        isEligible = postScore >= MIN_POST_SCORE ? true : false; // a post is adjudged eligible for reward if the post has ten (10) more upvotes than downvotes
+    }
+
+    
 
     /**
     * @dev this function resets the array containing the ids of posts eligible for reward. This function is called when the process for selecting the next winner is initiated

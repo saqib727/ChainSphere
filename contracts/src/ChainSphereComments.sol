@@ -186,6 +186,7 @@ contract ChainSphereComments is CSPosts {
 
     /**
     * @dev this function allows a registered user to like any comment
+    * @param _postId is the id of the post which was commented
     * @param _commentId is the id of the comment in question
     * @notice the function increments the number of likes on the comment by 1 and adds user to an array of likers
      */

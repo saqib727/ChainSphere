@@ -106,7 +106,7 @@ export default function Sidebar({ getUsersPosts }) {
     }
 
     if(!image) {
-      alert("please upload profile image")
+      alert("please upload image")
       return;
     }
     setLoading(true)
@@ -121,7 +121,11 @@ export default function Sidebar({ getUsersPosts }) {
 console.log('pinata!', imgHash);
       // Create post on blockchain
       await contract.methods.createPost(content, imgHash?.IpfsHash).send({ from: account });
-      getUsersPosts();
+      if (!!getUsersPosts) {
+        getUsersPosts();
+      } else {
+        navigate('/feed');
+      }
       setModalOpen(false);
       setContent('');
       setImage(null);
