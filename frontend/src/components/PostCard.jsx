@@ -585,14 +585,14 @@ export default function PostCard({ post, getUsersPosts, comments, reloadPost }) 
                   comment?.author !== "0x0000000000000000000000000000000000000000" && <div className="post-card__content__comments__card">
                     <img
                       className="post-card__content__comments__card__img"
-                      src={Image1}
+                      src={!!comment?.authorProfileImgHash ? `https://amethyst-abundant-squid-138.mypinata.cloud/ipfs/${comment?.authorProfileImgHash}` : Image1}
                       alt=""
                     />
                     <div className="post-card__content__comments__card__content">
                       <div className="post-card__content__comments__card__content__title">
                         <div>
-                          <div>Saleem Jibril</div>
-                          <div>@saleem · 1h</div>
+                          <div>{comment?.authorFullName}</div>
+                          <div>@{comment?.authorNickName} </div>
                         </div>
 
                         {comment?.author === auth?.userInfo?.address && (

@@ -10,12 +10,14 @@ The platform also has a `trending posts` section where users can see the recent 
 
 Pictures uploaded by users on the platform are saved on Interplanatary File System (IPFS) and the image hash is stored on the Smart contract.
 
+The Code base for frontend development of `ChainSphere` can be found in `/frontend` repository.
+
 ## Smart Contracts
 The `ChainSphere` Decentralized Social Media Application is coordinated by four Contracts (i.e. `ChainSphere.sol`, `ChainSphereUserProfile.sol`, `ChainSpherePosts` and `ChainSphereComments.sol`) and one library (`PriceConverter.sol`) all written in `Solidity` and deployed on the `Polygon Amoy` test net.
 
 The frontend interacts directly with the `ChainSphere.sol` contract which in turn delegates all user registration activities to the `ChainSphereUserProfile.sol` contract, all posts related activities to the `ChainSpherePosts` contract and all comments related activities to the `ChainSphereComments.sol` contract. Also, the Code base uses the `PriceConverter` library to get prices from Chainlink oracles using the Chainlink Price Feed Services.
 
-A more detailed explanation on the Smart Contract Code base is contained in the `README.md` file in the `/contracts` folder.
+A more detailed explanation on the Smart Contract Code base is contained in the `README.md` file in the `/contracts` folder where the entire Smart Conract Code base lie.
 
 ### The Selection of Authors for Reward
 As a way of promoting valuable content by users of the platform, `ChainSphere` has devised a means of rewarding users who create valuable content(s) on the platform that is practically infeasible to rig. The selection of authors with valuable contents for reward is carriedo out in the following steps:

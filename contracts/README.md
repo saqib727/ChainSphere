@@ -1155,6 +1155,9 @@ error ChainSphere__NotCommentOwner();
 * @param content is the content of the comment
 * @param timestamp is the time the comment was created.
 * @param likesCount is the number of likes acrued by the comment. This indicates how useful other users perceive the comment to be. 
+* @param authorNickName is the username (nick name) of the creator (author) of the comment.
+* @param authorFullName is the full name of the creator (author) of the comment.
+* @param authorProfileImgHash is the hash of profile picture of the creator (author) of the comment.
     */
 struct Comment {
     uint256 commentId;
@@ -1163,6 +1166,9 @@ struct Comment {
     string content;
     uint256 timestamp;
     uint256 likesCount;
+    string authorNickName;
+    string authorFullName;
+    string authorProfileImgHash;
 }
 
 ///////////////////////
@@ -1249,7 +1255,10 @@ The Constructor Function receives two parameters, passes both parameter to the `
             postId: _postId,
             content: _content,
             timestamp: block.timestamp,
-            likesCount: 0
+            likesCount: 0,
+            authorNickName: _getUser(msg.sender).nickName,
+            authorFullName: _getUser(msg.sender).fullNameOfUser,
+            authorProfileImgHash: _getUser(msg.sender).profileImageHash
         }); // create a new comment
 
         s_postAndCommentIdToAddress[_postId][_commentId] = msg.sender; // update the mappings array with the new comment
@@ -1280,7 +1289,7 @@ The Constructor Function receives two parameters, passes both parameter to the `
     }
    ```
 
-   **iii. The `_deleteComment` function:** This function receives `_postId` and `_commentId` as argument and deletes the content of the comment. Since deleting is technically not possible on the Ethereum Virtual Machine, we change the various components of the comment as follows: sets the `content` to `empty string`; and resets the `author` to `address(0)`.
+   **iii. The `_deleteComment` function:** This function receives `_postId` and `_commentId` as argument and deletes the content of the comment. Since deleting is technically not possible on the Ethereum Virtual Machine, we change the various components of the comment as follows: sets the `content`, `imgHash`, `authorNickName` and `authorFullName` as `empty string`; and resets the `author` to `address(0)`.
    ```javascript
        /**
      * @dev This function allows only the user who created a comment to delete it. 
@@ -1292,6 +1301,9 @@ The Constructor Function receives two parameters, passes both parameter to the `
         // get the comment from the Blockchain (call by reference) and update it
         s_postIdToComments[_postId][_commentId].content = ""; // delete content
         s_postIdToComments[_postId][_commentId].author = address(0); // delete address of comment author
+        s_postIdToComments[_postId][_commentId].authorNickName = "";
+        s_postIdToComments[_postId][_commentId].authorFullName = "";
+        s_postIdToComments[_postId][_commentId].authorProfileImgHash = "";
     }
    ```
 
