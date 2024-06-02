@@ -14,11 +14,13 @@ export default function Links() {
         <div className="links">
     <div className="links__inner">
     <div className="links__inner__profile-group">
-      {!!auth?.userInfo?.profilePic && <img
+      <img
         className="links__inner__profile-group__img"
-        src={`https://gateway.pinata.cloud/ipfs/${auth?.userInfo?.profilePic}`}
+        src={!!auth?.userInfo?.profilePic ? `https://amethyst-abundant-squid-138.mypinata.cloud/ipfs/${auth?.userInfo?.profilePic}` : Image1}
+
+        
         alt=""
-      />}
+      />
       <div className="links__inner__profile-group__name">
         <div>{auth?.userInfo?.name}</div>
         <div>@{auth?.userInfo?.username}</div>

@@ -8,17 +8,17 @@ import Testimonials from "../components/Testimonials";
 
 const App = () => {
   return (
-    <>
+    <div style={{padding: "0 126px"}}>
       <Navbar />
-      <div className="max-w-7xl mx-auto pt-20 px-6">
+      <div className=" mx-auto pt-20 px-6">
         <HeroSection />
         <FeatureSection />
-        <Workflow />
+        {/* <Workflow />
 
         <Testimonials />
-        <Footer />
+        <Footer /> */}
       </div>
-    </>
+    </div>
   );
 };
 

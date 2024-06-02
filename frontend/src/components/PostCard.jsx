@@ -536,7 +536,7 @@ export default function PostCard({ post, getUsersPosts, comments, reloadPost }) 
 
               {downvotes}
             </div>
-            <div className="post-card__content__actions__share">
+            {/* <div className="post-card__content__actions__share">
               <svg
                 viewBox="0 -0.5 25 25"
                 fill="none"
@@ -562,14 +562,14 @@ export default function PostCard({ post, getUsersPosts, comments, reloadPost }) 
                 </g>
               </svg>
               24
-            </div>
+            </div> */}
           </div>
           {pathname.includes("post") && (
             <form
               className="post-card__content__form"
               onSubmit={(e) => handleCreateComment(e, post?.postId)}
             >
-              <img src={Image1} alt="" />
+              <img src={!!auth?.userInfo?.profilePic ? `https://amethyst-abundant-squid-138.mypinata.cloud/ipfs/${auth?.userInfo?.profilePic}` : Image1} alt="" />
               <input
                 type="text"
                 placeholder="Write a comment"

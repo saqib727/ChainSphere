@@ -105,11 +105,12 @@ export default function Sidebar({ getUsersPosts }) {
       return;
     }
 
-    if(!image) {
-      alert("please upload image")
-      return;
-    }
+    // if(!image) {
+    //   alert("please upload image")
+    //   return;
+    // }
     setLoading(true)
+    let imgHash;
     // if (!image) {
     //   alert('Please select an image');
     //   return;
@@ -117,10 +118,12 @@ export default function Sidebar({ getUsersPosts }) {
 
     try {
       console.log('image', image);
-      const imgHash = await pinFileToIPFS(image);
-console.log('pinata!', imgHash);
+     if (image) {
+      imgHash = await pinFileToIPFS(image);
+      console.log('pinata!', imgHash);
+     }
       // Create post on blockchain
-      await contract.methods.createPost(content, imgHash?.IpfsHash).send({ from: account });
+      await contract.methods.createPost(content, imgHash?.IpfsHash || "").send({ from: account });
       if (!!getUsersPosts) {
         getUsersPosts();
       } else {

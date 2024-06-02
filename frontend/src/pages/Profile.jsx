@@ -176,32 +176,40 @@ console.log('pinata!', imgHash);
       // setNewName('');
       alert('Profile updated successfully!');
 
-      getUserInfo();
+      const userData = await contract.methods.getUser(account).call();
+      if (userData.userAddress === '0x0000000000000000000000000000000000000000') {
+        alert('User not registered');
+      } else {
+        console.log('userData', userData);
+        // setUser(userData);
+        console.log("REACT_APP_JWT_SECRET", process.env.REACT_APP_JWT_SECRET, "REACT_APP_JWT_EXPIRES_IN", process.env.REACT_APP_JWT_EXPIRES_IN);
 
-      const signToken = () => {
-        return  jwt.sign(
-          {
-            name,
-            username,
-           address,
-            profilePic: image,
-            bio
+        const signToken = () => {
+          return  jwt.sign(
+            {
+              name: userData?.fullNameOfUser,
+              username: userData?.nickName,
+             address: userData?.userAddress,
+              profilePic: userData?.profileImageHash,
+              bio: userData?.bio
+            },
+            process.env.REACT_APP_JWT_SECRET,
+            {
+              expiresIn: process.env.REACT_APP_JWT_EXPIRES_IN,
+            }
+          );
+        }
+        const token = signToken()
+        console.log('jwt.sign', token)
+        localStorage.setItem("token", token);
+        dispatch({
+          type: "USER_LOGIN_SUCCESS",
+          payload: {
+            token,
           },
-          process.env.REACT_APP_JWT_SECRET,
-          {
-            expiresIn: process.env.REACT_APP_JWT_EXPIRES_IN,
-          }
-        );
+        });
+        // navigate("/feed")
       }
-      const token = signToken()
-      console.log('jwt.sign', token)
-      localStorage.setItem("token", token);
-      dispatch({
-        type: "USER_LOGIN_SUCCESS",
-        payload: {
-          token,
-        },
-      });
     } catch (error) {
       console.error('Error updating profile:', error);
       alert(`Failed to update profile ${error?.message || error?.toString()}`);
